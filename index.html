@@ -179,11 +179,13 @@
         © 2026 Celengan Bersama <br>
     </footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-// 1. Inisialisasi Supabase (Sudah diperbaiki dengan menambahkan window.)
+<script>
+// 1. Inisialisasi Supabase
 const supabaseUrl = 'https://mvalceeamwqkxcydrflc.supabase.co';
 const supabaseKey = 'sb_publishable_hvBlPm85QvNHbt4ELPM6pw_yd8aBGIc';
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+// PERBAIKAN UTAMA: Nama variabel kita ubah jadi "db" agar tidak bentrok
+const db = supabase.createClient(supabaseUrl, supabaseKey);
 
 document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
 
@@ -193,14 +195,13 @@ const emptyState = document.getElementById('emptyState');
 
 let dataTabungan = [];
 
-// Fungsi Format Rupiah
 function formatRupiah(angka) {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(angka);
 }
 
-// 2. Fungsi Mengambil Data dari Supabase
 async function ambilDataDariSupabase() {
-    const { data, error } = await supabase
+    // Memanggil menggunakan variabel 'db'
+    const { data, error } = await db
         .from('tabungan_bersama')
         .select('*')
         .order('tanggal_menabung', { ascending: true });
@@ -210,11 +211,10 @@ async function ambilDataDariSupabase() {
         return;
     }
 
-    dataTabungan = data; 
-    kalkulasiDashboardDanTabel(); 
+    dataTabungan = data;
+    kalkulasiDashboardDanTabel();
 }
 
-// 3. Fungsi Render Tabel & Dashboard
 function kalkulasiDashboardDanTabel() {
     tableBody.innerHTML = '';
     
@@ -280,7 +280,6 @@ function kalkulasiDashboardDanTabel() {
     }
 }
 
-// 4. Fungsi Menyimpan Data Baru
 form.addEventListener('submit', async function(e) {
     e.preventDefault();
 
@@ -288,7 +287,8 @@ form.addEventListener('submit', async function(e) {
     submitBtn.innerText = "Menyimpan ke Database...";
     submitBtn.disabled = true;
 
-    const { data, error } = await supabase
+    // Memanggil menggunakan variabel 'db'
+    const { data, error } = await db
         .from('tabungan_bersama')
         .insert([
             {
@@ -312,8 +312,7 @@ form.addEventListener('submit', async function(e) {
     submitBtn.disabled = false;
 });
 
-// 5. Jalankan fungsi ambil data saat pertama kali dibuka
 ambilDataDariSupabase();
-    </script>
+</script>
 </body>
 </html>
