@@ -239,12 +239,31 @@ function kalkulasiDashboardDanTabel() {
 
         const totalGabungan = nominal1 + nominal2;
         
-        const tglMenabung = new Date(tanggalDB);
-        tglMenabung.setMonth(tglMenabung.getMonth() + tenor);
-        const tglJatuhTempo = tglMenabung.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+  const tanggalMulai = new Date(tanggalDB);
 
-        const bungaGrossPerTahun = bunga / 100;
-        const keuntunganBunga = totalGabungan * (bungaGrossPerTahun * (tenor / 12));
+// Hitung tanggal jatuh tempo
+const tanggalJatuhTempoObj = new Date(tanggalDB);
+tanggalJatuhTempoObj.setMonth(tanggalJatuhTempoObj.getMonth() + tenor);
+
+// Tampilkan tanggal jatuh tempo
+const tglJatuhTempo = tanggalJatuhTempoObj.toLocaleDateString(
+    'id-ID',
+    {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    }
+);
+
+// Hitung jumlah hari aktual
+const jumlahHari = Math.round(
+    (tanggalJatuhTempoObj - tanggalMulai) / (1000 * 60 * 60 * 24)
+);
+
+// Hitung bunga berdasarkan hari aktual
+const bungaGrossPerTahun = bunga / 100;
+const keuntunganBunga =
+    totalGabungan * bungaGrossPerTahun * (jumlahHari / 365);
         const hasilAkhirRow = totalGabungan + keuntunganBunga;
 
         akumulasiPokok += totalGabungan;
