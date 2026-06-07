@@ -180,10 +180,10 @@
     </footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-      // 1. Inisialisasi Supabase
+// 1. Inisialisasi Supabase (Sudah diperbaiki dengan menambahkan window.)
 const supabaseUrl = 'https://mvalceeamwqkxcydrflc.supabase.co';
 const supabaseKey = 'sb_publishable_hvBlPm85QvNHbt4ELPM6pw_yd8aBGIc';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
 
@@ -200,7 +200,6 @@ function formatRupiah(angka) {
 
 // 2. Fungsi Mengambil Data dari Supabase
 async function ambilDataDariSupabase() {
-    // Ambil data dan urutkan dari yang paling awal
     const { data, error } = await supabase
         .from('tabungan_bersama')
         .select('*')
@@ -211,11 +210,11 @@ async function ambilDataDariSupabase() {
         return;
     }
 
-    dataTabungan = data; // Simpan data dari database ke variabel
-    kalkulasiDashboardDanTabel(); // Jalankan perhitungan
+    dataTabungan = data; 
+    kalkulasiDashboardDanTabel(); 
 }
 
-// 3. Fungsi Render Tabel & Dashboard (Sama seperti sebelumnya)
+// 3. Fungsi Render Tabel & Dashboard
 function kalkulasiDashboardDanTabel() {
     tableBody.innerHTML = '';
     
@@ -232,7 +231,6 @@ function kalkulasiDashboardDanTabel() {
     let akumulasiPokok = 0, akumulasiBunga = 0, akumulasiUser1 = 0, akumulasiUser2 = 0;
 
     dataTabungan.forEach((item) => {
-        // Sesuaikan nama variabel dengan nama kolom di Supabase
         const nominal1 = parseFloat(item.nominal_user1);
         const nominal2 = parseFloat(item.nominal_user2);
         const tenor = item.jangka_waktu_bulan;
@@ -282,11 +280,10 @@ function kalkulasiDashboardDanTabel() {
     }
 }
 
-// 4. Fungsi Menyimpan Data Baru ke Supabase Saat Tombol Ditekan
+// 4. Fungsi Menyimpan Data Baru
 form.addEventListener('submit', async function(e) {
     e.preventDefault();
 
-    // Ubah tulisan tombol agar terlihat sedang memproses
     const submitBtn = document.querySelector('button[type="submit"]');
     submitBtn.innerText = "Menyimpan ke Database...";
     submitBtn.disabled = true;
@@ -306,20 +303,16 @@ form.addEventListener('submit', async function(e) {
     if (error) {
         alert("Gagal menyimpan data: " + error.message);
     } else {
-        // Ambil ulang data dari database agar tabel langsung ter-update
         await ambilDataDariSupabase();
-        
-        // Reset form
         document.getElementById('nominalUser1').value = '';
         document.getElementById('nominalUser2').value = '';
     }
 
-    // Kembalikan tombol seperti semula
     submitBtn.innerText = "Simpan & Hitung Alokasi";
     submitBtn.disabled = false;
 });
 
-// 5. Jalankan fungsi ambil data saat website pertama kali dibuka
+// 5. Jalankan fungsi ambil data saat pertama kali dibuka
 ambilDataDariSupabase();
     </script>
 </body>
