@@ -198,6 +198,23 @@ let dataTabungan = [];
 function formatRupiah(angka) {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(angka);
 }
+    // Fungsi untuk menghapus semua data di Supabase
+async function hapusSemuaData() {
+    if (confirm('Apakah Anda yakin ingin menghapus seluruh riwayat tabungan bersama dari database?')) {
+        const { error } = await db
+            .from('tabungan_bersama')
+            .delete()
+            .neq('id', 0); // Menghapus semua baris yang memiliki ID tidak sama dengan 0 (artinya semua data)
+
+        if (error) {
+            alert("Gagal menghapus data: " + error.message);
+        } else {
+            // Setelah data di database terhapus, update tampilan di web
+            await ambilDataDariSupabase();
+            alert("Seluruh data telah berhasil dihapus.");
+        }
+    }
+}
 
 async function ambilDataDariSupabase() {
     // Memanggil menggunakan variabel 'db'
@@ -286,23 +303,7 @@ form.addEventListener('submit', async function(e) {
     const submitBtn = document.querySelector('button[type="submit"]');
     submitBtn.innerText = "Menyimpan ke Database...";
     submitBtn.disabled = true;
-// Fungsi untuk menghapus semua data di Supabase
-async function hapusSemuaData() {
-    if (confirm('Apakah Anda yakin ingin menghapus seluruh riwayat tabungan bersama dari database?')) {
-        const { error } = await db
-            .from('tabungan_bersama')
-            .delete()
-            .neq('id', 0); // Menghapus semua baris yang memiliki ID tidak sama dengan 0 (artinya semua data)
 
-        if (error) {
-            alert("Gagal menghapus data: " + error.message);
-        } else {
-            // Setelah data di database terhapus, update tampilan di web
-            await ambilDataDariSupabase();
-            alert("Seluruh data telah berhasil dihapus.");
-        }
-    }
-}
     // Memanggil menggunakan variabel 'db'
     const { data, error } = await db
         .from('tabungan_bersama')
