@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Celengan Bersama</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen antialiased">
+
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 bg-indigo-600 rounded-lg text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="text-xl font-bold bg-gradient-to-r charity-theme from-indigo-600 to-violet-600 bg-clip-text text-transparent">Celengan Gaes</span>
+                        <span class="text-xs block text-slate-400 font-medium tracking-wide uppercase">Couple Savings Tracker</span>
+                    </div>
+                </div>
+                <div class="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
+                    ❤️ Ruang Finansial Kita
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs relative overflow-hidden">
+                <p class="text-sm font-medium text-slate-400 uppercase tracking-wider">💰 Total Modal Aktif</p>
+                <h3 id="cardTotalModalAktif" class="text-2xl font-bold text-slate-900 mt-1">Rp 0</h3>
+                <div class="mt-4">
+                    <div class="flex justify-between text-xs text-slate-500 mb-1">
+                        <span>Rasio Kontribusi Aktif</span>
+                        <span id="rasioTeks">0% : 0%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2 flex overflow-hidden">
+                        <div id="barUser1" class="bg-indigo-500 h-full transition-all duration-500" style="width: 50%"></div>
+                        <div id="barUser2" class="bg-rose-400 h-full transition-all duration-500" style="width: 50%"></div>
+                    </div>
+                    <div class="flex justify-between text-[10px] mt-1">
+                        <span class="text-indigo-600 font-medium">● Vian</span>
+                        <span class="text-rose-500 font-medium">Vitasya ●</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                <div>
+                    <p class="text-sm font-medium text-slate-400 uppercase tracking-wider">📈 Return Berjalan</p>
+                    <h3 id="cardEstimasiReturn" class="text-2xl font-bold text-emerald-500 mt-1">Rp 0</h3>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-4 leading-relaxed">*Akumulasi proyeksi keuntungan dari portofolio aktif</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                <div>
+                    <p class="text-sm font-medium text-slate-400 uppercase tracking-wider">🏦 Total Aset Cair</p>
+                    <h3 id="cardTotalAsetCair" class="text-2xl font-bold text-blue-600 mt-1">Rp 0</h3>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-4 leading-relaxed">*Modal + hasil dari Deposito jatuh tempo / Reksa Dana yang dicairkan</p>
+            </div>
+
+            <div class="bg-gradient-to-br from-indigo-600 to-violet-700 p-6 rounded-2xl text-white shadow-md flex flex-col justify-between">
+                <div>
+                    <p class="text-sm font-medium text-indigo-200 uppercase tracking-wider">💎 Total Kekayaan Bersama</p>
+                    <h3 id="cardTotalKekayaan" class="text-3xl font-bold mt-1">Rp 0</h3>
+                </div>
+                <p class="text-xs text-indigo-200 mt-4 flex items-center gap-1 border-t border-white/20 pt-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-300" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l5-5z" clip-rule="evenodd" />
+                    </svg>
+                    Modal Aktif + Return + Aset Cair
+                </p>
+            </div>
+
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-1">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs sticky top-24">
+                    <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <span class="w-1.5 h-5 bg-indigo-600 rounded-sm inline-block"></span> Tambah Sesi Menabung
+                    </h2>
+
+                    <form id="savingForm" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Tanggal Menabung</label>
+                            <input type="date" id="tanggal" required class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-slate-50 transition">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Instrumen Investasi</label>
+                            <select id="jenisInvestasi" class="w-full rounded-xl border border-slate-200 p-3 text-sm bg-slate-50">
+                                <option value="deposito">Deposito</option>
+                                <option value="reksadana">Reksa Dana</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Setoran Vian (Rp)</label>
+                                <input type="number" id="nominalUser1" placeholder="0" required class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-slate-50 transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Setoran Vitasya</label>
+                                <input type="number" id="nominalUser2" placeholder="0" required class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-rose-400 bg-slate-50 transition">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label id="tenorLabel" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Tenor Deposito</label>
+                                <select id="tenor" class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-slate-50 transition">
+                                    <option value="1">1 Bulan</option>
+                                    <option value="3">3 Bulan</option>
+                                    <option value="6">6 Bulan</option>
+                                    <option value="12" selected>12 Bulan</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Imbal Hasil (% / Thn)</label>
+                                <input type="number" step="0.01" id="bunga" value="5.00" required class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-slate-50 transition">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold p-3.5 rounded-xl transition duration-200 shadow-sm shadow-indigo-200 mt-2 flex justify-center items-center gap-2 text-sm cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Simpan Ke Portofolio
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                    <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
+                        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <span class="w-1.5 h-5 bg-indigo-600 rounded-sm inline-block"></span> Buku Catatan Transaksi
+                        </h2>
+                        <button id="btnResetData" class="text-xs font-medium text-red-500 hover:text-red-700 hover:bg-red-50 px-2.5 py-1.5 rounded-lg transition border border-transparent hover:border-red-100 cursor-pointer">
+                            Reset Data
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[700px]">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-100 text-slate-400 text-[11px] uppercase font-bold tracking-wider">
+                                    <th class="p-4 w-32">Tanggal</th>
+                                    <th class="p-4">Rincian Kontribusi</th>
+                                    <th class="p-4">Jenis & Bunga</th>
+                                    <th class="p-4">Target Waktu</th>
+                                    <th class="p-4">Status</th>
+                                    <th class="p-4 text-right">Proyeksi Hasil</th>
+                                    <th class="p-4 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody" class="text-sm text-slate-600 divide-y divide-slate-100">
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="emptyState" class="hidden p-12 text-center text-slate-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-slate-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                        </svg>
+                        Belum ada catatan menabung. Masukkan dana pertama Anda!
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 py-12 border-t border-slate-200 mt-12 bg-white">
+        © 2026 Celengan Bersama <br>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const supabaseUrl = 'https://mvalceeamwqkxcydrflc.supabase.co';
+        const supabaseKey = 'sb_publishable_hvBlPm85QvNHbt4ELPM6pw_yd8aBGIc';
+        const db = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
+
+        document.getElementById('jenisInvestasi').addEventListener('change', function(e) {
+            const label = document.getElementById('tenorLabel');
+            if(e.target.value === 'reksadana') {
+                label.innerText = "Target Waktu";
+            } else {
+                label.innerText = "Tenor Deposito";
+            }
+        });
+
+        const form = document.getElementById('savingForm');
+        const tableBody = document.getElementById('tableBody');
+        const emptyState = document.getElementById('emptyState');
+
+        let dataTabungan = [];
+
+        function formatRupiah(angka) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(angka);
+        }
+
+        // FUNGSI UTAMA AMBIL DATA
+        async function ambilDataDariSupabase() {
+            const { data, error } = await db
+                .from('tabungan_bersama')
+                .select('*')
+                .order('tanggal_menabung', { ascending: true });
+
+            if (error) {
+                console.error("Gagal mengambil data:", error);
+                return;
+            }
+            dataTabungan = data;
+            kalkulasiDashboardDanTabel();
+        }
+
+        // FUNGSI UTAMA KELOLA TOMBOL (CAIRKAN & HAPUS) - EVENT DELEGATION
+        tableBody.addEventListener('click', async function(e) {
+            // Deteksi jika yang diklik tombol Hapus
+            if (e.target.classList.contains('btn-hapus-row')) {
+                const idTrans = e.target.getAttribute('data-id');
+                if (!confirm('Hapus transaksi ini dari riwayat?')) return;
+                
+                const { error } = await db.from('tabungan_bersama').delete().eq('id', idTrans);
+                if (error) { alert("Gagal menghapus: " + error.message); return; }
+                await ambilDataDariSupabase();
+            }
+            
+            // Deteksi jika yang diklik tombol Cairkan
+            if (e.target.classList.contains('btn-cairkan-row')) {
+                const idTrans = e.target.getAttribute('data-id');
+                
+                const { error } = await db.from('tabungan_bersama').update({
+                    status: 'selesai',
+                    sudah_dicairkan: true
+                }).eq('id', idTrans);
+                
+                if (error) { alert("Gagal mencairkan: " + error.message); return; }
+                await ambilDataDariSupabase();
+            }
+        });
+
+        // FUNGSI OTOMATIS HITUNG UNTUK BACKGROUND AUTO-CAIR DEPOSITO
+        async function autoCairLatarBelakang(id) {
+            await db.from('tabungan_bersama').update({
+                status: 'selesai',
+                sudah_dicairkan: true
+            }).eq('id', id);
+        }
+
+        function kalkulasiDashboardDanTabel() {
+            tableBody.innerHTML = '';
+
+            if (dataTabungan.length === 0) {
+                emptyState.classList.remove('hidden');
+                document.getElementById('cardTotalModalAktif').innerText = "Rp 0";
+                document.getElementById('cardEstimasiReturn').innerText = "Rp 0";
+                document.getElementById('cardTotalAsetCair').innerText = "Rp 0";
+                document.getElementById('cardTotalKekayaan').innerText = "Rp 0";
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            let totalModalAktif = 0;
+            let estimasiReturn = 0;
+            let totalAsetCair = 0;
+            let akumulasiUser1 = 0;
+            let akumulasiUser2 = 0;
+
+            const sekarang = new Date();
+
+            dataTabungan.forEach((item) => {
+                const nominal1 = parseFloat(item.nominal_user1);
+                const nominal2 = parseFloat(item.nominal_user2);
+                const tenor = item.jangka_waktu_bulan;
+                const bungaPersen = parseFloat(item.suku_bunga_persen);
+                const tanggalDB = item.tanggal_menabung;
+                const jenisInvestasi = item.jenis_investasi || 'deposito';
+
+                const totalGabungan = nominal1 + nominal2;
+
+                const tanggalMulai = new Date(tanggalDB);
+                const tanggalJatuhTempoObj = new Date(tanggalDB);
+                tanggalJatuhTempoObj.setMonth(tanggalJatuhTempoObj.getMonth() + tenor);
+
+                const tglJatuhTempoStr = tanggalJatuhTempoObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+
+                let isSelesai = item.status === 'selesai' || item.sudah_dicairkan;
+                
+                // AUTO-CAIR JIKA HARI INI MELEWATI JATUH TEMPO (KHUSUS DEPOSITO)
+                if (!isSelesai && jenisInvestasi === 'deposito' && sekarang >= tanggalJatuhTempoObj) {
+                    isSelesai = true;
+                    autoCairLatarBelakang(item.id); 
+                }
+
+                // HITUNG RUMUS PROYEKSI PENUH SEPERTI SEBELUMNYA
+                const bungaDesimal = bungaPersen / 100;
+                const nilaiReturn = Math.floor(totalGabungan * bungaDesimal * (tenor / 12));
+                const hasilAkhirRow = totalGabungan + nilaiReturn;
+
+                if (isSelesai) {
+                    totalAsetCair += hasilAkhirRow;
+                } else {
+                    totalModalAktif += totalGabungan;
+                    estimasiReturn += nilaiReturn;
+                    akumulasiUser1 += nominal1;
+                    akumulasiUser2 += nominal2;
+                }
+
+                // PERBAIKAN: Mengganti onclick dengan class penanda (btn-cairkan-row / btn-hapus-row) dan Atribut HTML5 data-id
+                const row = `
+                <tr class="hover:bg-slate-50/70 transition-colors ${isSelesai ? 'opacity-70 bg-slate-50' : ''}">
+                    <td class="p-4 font-medium text-slate-700">${new Date(tanggalDB).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit' })}</td>
+                    <td class="p-4 space-y-0.5">
+                        <div class="flex items-center gap-1.5 text-xs"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> Anda: <span class="font-medium text-slate-700">${formatRupiah(nominal1)}</span></div>
+                        <div class="flex items-center gap-1.5 text-xs"><span class="w-2 h-2 rounded-full bg-rose-400"></span> Psg: <span class="font-medium text-slate-700">${formatRupiah(nominal2)}</span></div>
+                    </td>
+                    <td class="p-4">
+                        <div class="font-semibold text-slate-800 text-xs capitalize">${jenisInvestasi}</div>
+                        <div class="text-xs text-slate-500">${bungaPersen}% / thn</div>
+                    </td>
+                    <td class="p-4 text-amber-600 font-medium text-xs">${tglJatuhTempoStr}</td>
+                    <td class="p-4">
+                        ${isSelesai ? 
+                          '<span class="bg-blue-100 text-blue-700 px-2 py-1 rounded-md text-xs font-semibold">Cair / Selesai</span>' : 
+                          '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md text-xs font-semibold">Aktif Berjalan</span>'}
+                    </td>
+                    <td class="p-4 font-bold text-slate-900 text-right bg-slate-50/40">
+                        ${formatRupiah(hasilAkhirRow)}
+                        <div class="text-[10px] text-emerald-500 font-normal">+${formatRupiah(nilaiReturn)}</div>
+                    </td>
+                    <td class="p-4 text-center">
+                        <div class="flex justify-center gap-2">
+                            ${!isSelesai ? `<button class="bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] px-2.5 py-1 rounded shadow-sm transition btn-cairkan-row cursor-pointer" data-id="${item.id}">Cairkan</button>` : ''}
+                            <button class="bg-red-50 hover:bg-red-100 text-red-500 text-[10px] px-2.5 py-1 rounded transition border border-red-100 btn-hapus-row cursor-pointer" data-id="${item.id}">Hapus</button>
+                        </div>
+                    </td>
+                </tr>`;
+                
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
+
+            const totalKekayaanBersama = totalModalAktif + totalAsetCair + estimasiReturn;
+
+            document.getElementById('cardTotalModalAktif').innerText = formatRupiah(totalModalAktif);
+            document.getElementById('cardEstimasiReturn').innerText = formatRupiah(estimasiReturn);
+            document.getElementById('cardTotalAsetCair').innerText = formatRupiah(totalAsetCair);
+            document.getElementById('cardTotalKekayaan').innerText = formatRupiah(totalKekayaanBersama);
+
+            if (totalModalAktif > 0) {
+                const persenUser1 = ((akumulasiUser1 / totalModalAktif) * 100).toFixed(0);
+                document.getElementById('barUser1').style.width = persenUser1 + '%';
+                document.getElementById('barUser2').style.width = (100 - persenUser1) + '%';
+                document.getElementById('rasioTeks').innerText = `${persenUser1}% : ${100 - persenUser1}%`;
+            } else {
+                document.getElementById('barUser1').style.width = '50%';
+                document.getElementById('barUser2').style.width = '50%';
+                document.getElementById('rasioTeks').innerText = `0% : 0%`;
+            }
+        }
+
+        // SIMPAN DATA BARU
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const submitBtn = document.querySelector('button[type="submit"]');
+            submitBtn.innerText = "Menyimpan ke Portofolio...";
+            submitBtn.disabled = true;
+
+            const { error } = await db
+                .from('tabungan_bersama')
+                .insert([
+                    {
+                        tanggal_menabung: document.getElementById('tanggal').value,
+                        nominal_user1: parseFloat(document.getElementById('nominalUser1').value || 0),
+                        nominal_user2: parseFloat(document.getElementById('nominalUser2').value || 0),
+                        jangka_waktu_bulan: parseInt(document.getElementById('tenor').value),
+                        suku_bunga_persen: parseFloat(document.getElementById('bunga').value),
+                        jenis_investasi: document.getElementById('jenisInvestasi').value,
+                        status: 'berjalan',
+                        sudah_dicairkan: false
+                    }
+                ]);
+
+            if (error) {
+                alert("Gagal menyimpan data: " + error.message);
+            } else {
+                await ambilDataDariSupabase();
+                document.getElementById('nominalUser1').value = '';
+                document.getElementById('nominalUser2').value = '';
+            }
+
+            submitBtn.innerText = "Simpan Ke Portofolio";
+            submitBtn.disabled = false;
+        });
+
+        // RESET SEMUA DATA (KOMBID BERBASIS EVENT LISTENER)
+        document.getElementById('btnResetData').addEventListener('click', async function() {
+            if (confirm('Apakah Anda yakin ingin menghapus seluruh riwayat tabungan bersama dari database?')) {
+                const { error } = await db.from('tabungan_bersama').delete().neq('id', '0');
+                if (error) { alert("Gagal menghapus data: " + error.message); } 
+                else { await ambilDataDariSupabase(); }
+            }
+        });
+
+        ambilDataDariSupabase();
+    </script>
+</body>
+
+</html>
