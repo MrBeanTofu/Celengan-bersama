@@ -69,7 +69,7 @@
                     <p class="text-sm font-medium text-slate-400 uppercase tracking-wider">📈 Return Berjalan</p>
                     <h3 id="cardEstimasiReturn" class="text-2xl font-bold text-emerald-500 mt-1">Rp 0</h3>
                 </div>
-                <p class="text-[11px] text-slate-400 mt-4 leading-relaxed">*Akumulasi proyeksi keuntungan dari portofolio aktif</p>
+                <p class="text-[11px] text-slate-400 mt-4 leading-relaxed">*Estimasi keuntungan yang sedang berjalan di pasar</p>
             </div>
 
             <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
@@ -77,7 +77,7 @@
                     <p class="text-sm font-medium text-slate-400 uppercase tracking-wider">🏦 Total Aset Cair</p>
                     <h3 id="cardTotalAsetCair" class="text-2xl font-bold text-blue-600 mt-1">Rp 0</h3>
                 </div>
-                <p class="text-[11px] text-slate-400 mt-4 leading-relaxed">*Modal + hasil dari Deposito jatuh tempo / Reksa Dana yang dicairkan</p>
+                <p class="text-[11px] text-slate-400 mt-4 leading-relaxed">*Modal + Hasil bersih riil yang sudah berhasil ditarik</p>
             </div>
 
             <div class="bg-gradient-to-br from-indigo-600 to-violet-700 p-6 rounded-2xl text-white shadow-md flex flex-col justify-between">
@@ -138,7 +138,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Imbal Hasil (% / Thn)</label>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Proyeksi Bunga (%/Thn)</label>
                                 <input type="number" step="0.01" id="bunga" value="5.00" required class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-slate-50 transition">
                             </div>
                         </div>
@@ -173,7 +173,7 @@
                                     <th class="p-4">Jenis & Bunga</th>
                                     <th class="p-4">Target Waktu</th>
                                     <th class="p-4">Status</th>
-                                    <th class="p-4 text-right">Proyeksi Hasil</th>
+                                    <th class="p-4 text-right">Nilai Akhir</th>
                                     <th class="p-4 text-center">Aksi</th>
                                 </tr>
                             </thead>
@@ -225,24 +225,9 @@
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(angka);
         }
 
-        // FUNGSI UTAMA AMBIL DATA
-        async function ambilDataDariSupabase() {
-            const { data, error } = await db
-                .from('tabungan_bersama')
-                .select('*')
-                .order('tanggal_menabung', { ascending: true });
-
-            if (error) {
-                console.error("Gagal mengambil data:", error);
-                return;
-            }
-            dataTabungan = data;
-            kalkulasiDashboardDanTabel();
-        }
-
-        // FUNGSI UTAMA KELOLA TOMBOL (CAIRKAN & HAPUS) - EVENT DELEGATION
+        // --- FUNGSI EVENT DELEGATION UNTUK TOMBOL (DIJAMIN AKTIF) ---
         tableBody.addEventListener('click', async function(e) {
-            // Deteksi jika yang diklik tombol Hapus
+            // JIKA TOMBOL HAPUS DIKLIK
             if (e.target.classList.contains('btn-hapus-row')) {
                 const idTrans = e.target.getAttribute('data-id');
                 if (!confirm('Hapus transaksi ini dari riwayat?')) return;
@@ -252,26 +237,55 @@
                 await ambilDataDariSupabase();
             }
             
-            // Deteksi jika yang diklik tombol Cairkan
+            // JIKA TOMBOL CAIRKAN DIKLIK
             if (e.target.classList.contains('btn-cairkan-row')) {
                 const idTrans = e.target.getAttribute('data-id');
+                const jenisInvest = e.target.getAttribute('data-jenis');
                 
+                // MUNCULKAN POPUP MEMINTA NOMINAL KEUNTUNGAN ASLI
+                let pesan = jenisInvest === 'reksadana' 
+                    ? "Reksa Dana bersifat fluktuatif.\nBerapa total NOMINAL KEUNTUNGAN RIIL (Rp) yang Anda dapatkan saat pencairan ini?"
+                    : "Berapa total NOMINAL KEUNTUNGAN (Rp) bersih setelah pajak yang Anda terima saat pencairan?";
+                
+                let inputNominal = prompt(pesan, "0");
+                
+                // Jika ditekan Cancel
+                if (inputNominal === null) return;
+                
+                let keuntunganRiil = parseFloat(inputNominal) || 0;
+
                 const { error } = await db.from('tabungan_bersama').update({
                     status: 'selesai',
-                    sudah_dicairkan: true
+                    sudah_dicairkan: true,
+                    keuntungan_riil: keuntunganRiil // MENYIMPAN KE KOLOM BARU DI SUPABASE
                 }).eq('id', idTrans);
                 
-                if (error) { alert("Gagal mencairkan: " + error.message); return; }
+                if (error) { 
+                    alert("Gagal mencairkan. Pastikan Anda sudah membuat kolom 'keuntungan_riil' di tabel Supabase. Error: " + error.message); 
+                    return; 
+                }
                 await ambilDataDariSupabase();
             }
         });
 
-        // FUNGSI OTOMATIS HITUNG UNTUK BACKGROUND AUTO-CAIR DEPOSITO
-        async function autoCairLatarBelakang(id) {
+        // FUNGSI BACKGROUND AUTO-CAIR DEPOSITO
+        async function autoCairLatarBelakang(id, profitOtomatis) {
             await db.from('tabungan_bersama').update({
                 status: 'selesai',
-                sudah_dicairkan: true
+                sudah_dicairkan: true,
+                keuntungan_riil: profitOtomatis // Auto simpan hasil rumus ke kolom riil
             }).eq('id', id);
+        }
+
+        async function ambilDataDariSupabase() {
+            const { data, error } = await db
+                .from('tabungan_bersama')
+                .select('*')
+                .order('tanggal_menabung', { ascending: true });
+
+            if (error) { console.error("Gagal mengambil data:", error); return; }
+            dataTabungan = data;
+            kalkulasiDashboardDanTabel();
         }
 
         function kalkulasiDashboardDanTabel() {
@@ -303,7 +317,6 @@
                 const bungaPersen = parseFloat(item.suku_bunga_persen);
                 const tanggalDB = item.tanggal_menabung;
                 const jenisInvestasi = item.jenis_investasi || 'deposito';
-
                 const totalGabungan = nominal1 + nominal2;
 
                 const tanggalMulai = new Date(tanggalDB);
@@ -317,12 +330,33 @@
                 // AUTO-CAIR JIKA HARI INI MELEWATI JATUH TEMPO (KHUSUS DEPOSITO)
                 if (!isSelesai && jenisInvestasi === 'deposito' && sekarang >= tanggalJatuhTempoObj) {
                     isSelesai = true;
-                    autoCairLatarBelakang(item.id); 
+                    // Hitung profit otomatis berdasarkan rumus dasar lalu kunci di database
+                    const totalHariTarget = Math.floor((tanggalJatuhTempoObj - tanggalMulai) / (1000 * 60 * 60 * 24));
+                    const autoProfit = Math.floor(totalGabungan * (bungaPersen / 100) * (totalHariTarget / 365));
+                    autoCairLatarBelakang(item.id, autoProfit); 
                 }
 
-                // HITUNG RUMUS PROYEKSI PENUH SEPERTI SEBELUMNYA
-                const bungaDesimal = bungaPersen / 100;
-                const nilaiReturn = Math.floor(totalGabungan * bungaDesimal * (tenor / 12));
+                let nilaiReturn = 0;
+                let textBungaClass = "text-emerald-500 font-normal";
+
+                // LOGIKA PENENTUAN BUNGA RIIL VS ESTIMASI
+                if (isSelesai) {
+                    // Cek apakah database sudah menyimpan input Keuntungan Riil dari user
+                    if (item.keuntungan_riil !== null && item.keuntungan_riil !== undefined) {
+                        nilaiReturn = parseFloat(item.keuntungan_riil);
+                    } else {
+                        // Fallback (rumus lama) jika kolom belum ada/diisi
+                        const totalHariTarget = Math.floor((tanggalJatuhTempoObj - tanggalMulai) / (1000 * 60 * 60 * 24));
+                        nilaiReturn = Math.floor(totalGabungan * (bungaPersen / 100) * (totalHariTarget / 365));
+                    }
+                    textBungaClass = "text-blue-600 font-semibold"; // Warna biru jika sudah cair (realized gain)
+                } else {
+                    // Jika masih berjalan, hitung akumulasi proyeksi hari ini
+                    let hariBerjalan = Math.floor((sekarang - tanggalMulai) / (1000 * 60 * 60 * 24));
+                    if (hariBerjalan < 0) hariBerjalan = 0;
+                    nilaiReturn = Math.floor(totalGabungan * (bungaPersen / 100) * (hariBerjalan / 365));
+                }
+
                 const hasilAkhirRow = totalGabungan + nilaiReturn;
 
                 if (isSelesai) {
@@ -334,9 +368,8 @@
                     akumulasiUser2 += nominal2;
                 }
 
-                // PERBAIKAN: Mengganti onclick dengan class penanda (btn-cairkan-row / btn-hapus-row) dan Atribut HTML5 data-id
                 const row = `
-                <tr class="hover:bg-slate-50/70 transition-colors ${isSelesai ? 'opacity-70 bg-slate-50' : ''}">
+                <tr class="hover:bg-slate-50/70 transition-colors ${isSelesai ? 'opacity-80 bg-slate-50/60' : ''}">
                     <td class="p-4 font-medium text-slate-700">${new Date(tanggalDB).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit' })}</td>
                     <td class="p-4 space-y-0.5">
                         <div class="flex items-center gap-1.5 text-xs"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> Anda: <span class="font-medium text-slate-700">${formatRupiah(nominal1)}</span></div>
@@ -344,7 +377,7 @@
                     </td>
                     <td class="p-4">
                         <div class="font-semibold text-slate-800 text-xs capitalize">${jenisInvestasi}</div>
-                        <div class="text-xs text-slate-500">${bungaPersen}% / thn</div>
+                        <div class="text-xs text-slate-500">Estimasi ${bungaPersen}%/thn</div>
                     </td>
                     <td class="p-4 text-amber-600 font-medium text-xs">${tglJatuhTempoStr}</td>
                     <td class="p-4">
@@ -354,11 +387,11 @@
                     </td>
                     <td class="p-4 font-bold text-slate-900 text-right bg-slate-50/40">
                         ${formatRupiah(hasilAkhirRow)}
-                        <div class="text-[10px] text-emerald-500 font-normal">+${formatRupiah(nilaiReturn)}</div>
+                        <div class="text-[10px] ${textBungaClass}">+${formatRupiah(nilaiReturn)} ${isSelesai ? '(Riil)' : '(Est)'}</div>
                     </td>
                     <td class="p-4 text-center">
                         <div class="flex justify-center gap-2">
-                            ${!isSelesai ? `<button class="bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] px-2.5 py-1 rounded shadow-sm transition btn-cairkan-row cursor-pointer" data-id="${item.id}">Cairkan</button>` : ''}
+                            ${!isSelesai ? `<button class="bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] px-2.5 py-1 rounded shadow-sm transition btn-cairkan-row cursor-pointer" data-id="${item.id}" data-jenis="${jenisInvestasi}">Cairkan</button>` : ''}
                             <button class="bg-red-50 hover:bg-red-100 text-red-500 text-[10px] px-2.5 py-1 rounded transition border border-red-100 btn-hapus-row cursor-pointer" data-id="${item.id}">Hapus</button>
                         </div>
                     </td>
@@ -386,7 +419,6 @@
             }
         }
 
-        // SIMPAN DATA BARU
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
 
@@ -421,7 +453,6 @@
             submitBtn.disabled = false;
         });
 
-        // RESET SEMUA DATA (KOMBID BERBASIS EVENT LISTENER)
         document.getElementById('btnResetData').addEventListener('click', async function() {
             if (confirm('Apakah Anda yakin ingin menghapus seluruh riwayat tabungan bersama dari database?')) {
                 const { error } = await db.from('tabungan_bersama').delete().neq('id', '0');
