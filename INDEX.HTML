@@ -48,7 +48,7 @@
                 <h3 id="cardTotalModalAktif" class="text-2xl font-bold text-slate-900 mt-1">Rp 0</h3>
                 <div class="mt-4">
                     <div class="flex justify-between text-xs text-slate-500 mb-1">
-                        <span>Rasio Kontribusi Aktif</span>
+                        <span>Rasio Kepemilikan Aktif</span>
                         <span id="rasioTeks">0% : 0%</span>
                     </div>
                     <div class="w-full bg-slate-100 rounded-full h-2 flex overflow-hidden">
@@ -97,31 +97,46 @@
             <div class="lg:col-span-1">
                 <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs sticky top-24">
                     <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                        <span class="w-1.5 h-5 bg-indigo-600 rounded-sm inline-block"></span> Tambah Portofolio
+                        <span class="w-1.5 h-5 bg-indigo-600 rounded-sm inline-block"></span> Tambah Portofolio Baru
                     </h2>
 
                     <form id="savingForm" class="space-y-4">
                         
-                        <div>
-                            <div class="flex justify-between items-end mb-1">
-                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500">Gunakan Saldo Aset (Rp)</label>
-                                <span class="text-[10px] text-slate-400 font-medium">Maks: <span id="labelMaksAset" class="text-indigo-600 font-bold">Rp 0</span></span>
-                            </div>
-                            <input type="number" id="danaAsetDipakai" placeholder="0 (Kosongkan jika 100% uang baru)" class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-slate-50 transition">
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-3 mt-2">
+                        <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Setoran Vian (Rp)</label>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Porsi Vian (Rp)</label>
                                 <input type="number" id="nominalUser1" placeholder="0" required class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-slate-50 transition">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Setoran Vitasya</label>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Porsi Vitasya (Rp)</label>
                                 <input type="number" id="nominalUser2" placeholder="0" required class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-rose-400 bg-slate-50 transition">
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                            <div class="flex justify-between items-end mb-1">
+                                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600">Bayar Pakai Saldo Aset Cair?</label>
+                                <span class="text-[10px] text-slate-400 font-medium">Maks: <span id="labelMaksAset" class="text-indigo-600 font-bold">Rp 0</span></span>
+                            </div>
+                            <input type="number" id="danaAsetDipakai" placeholder="Isi 0 jika 100% uang baru" class="w-full rounded-lg border border-slate-300 p-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white transition">
+                        </div>
+
+                        <div class="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 text-[11px] text-slate-600 space-y-1.5 shadow-inner">
+                            <div class="flex justify-between font-medium">
+                                <span>Total Harga Beli Aset:</span>
+                                <span id="calcTotal" class="text-slate-800">Rp 0</span>
+                            </div>
+                            <div class="flex justify-between text-blue-600">
+                                <span>- Dibayar via Aset Cair:</span>
+                                <span id="calcAset">Rp 0</span>
+                            </div>
+                            <div class="flex justify-between border-t border-indigo-200 pt-1.5 mt-1 font-bold text-indigo-700">
+                                <span>WAJIB TRANSFER UANG BARU:</span>
+                                <span id="calcSisa">Rp 0</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 mt-4">
                             <div>
                                 <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Tanggal</label>
                                 <input type="date" id="tanggal" required class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-slate-50 transition">
@@ -177,7 +192,7 @@
                             <thead>
                                 <tr class="bg-slate-50 border-b border-slate-100 text-slate-400 text-[11px] uppercase font-bold tracking-wider">
                                     <th class="p-4 w-32">Tanggal</th>
-                                    <th class="p-4">Rincian Kontribusi</th>
+                                    <th class="p-4">Porsi Kepemilikan</th>
                                     <th class="p-4">Instrumen</th>
                                     <th class="p-4">Status & Waktu</th>
                                     <th class="p-4 text-right">Nilai Portofolio</th>
@@ -228,6 +243,25 @@
         function formatRupiah(angka) {
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(angka);
         }
+
+        // FUNGSI KALKULATOR LIVE DI FORM
+        function hitungKalkulatorRincian() {
+            const n1 = parseFloat(document.getElementById('nominalUser1').value || 0);
+            const n2 = parseFloat(document.getElementById('nominalUser2').value || 0);
+            const aset = parseFloat(document.getElementById('danaAsetDipakai').value || 0);
+            
+            const total = n1 + n2;
+            let sisaUangBaru = total - aset;
+            if (sisaUangBaru < 0) sisaUangBaru = 0;
+
+            document.getElementById('calcTotal').innerText = formatRupiah(total);
+            document.getElementById('calcAset').innerText = formatRupiah(aset);
+            document.getElementById('calcSisa').innerText = formatRupiah(sisaUangBaru);
+        }
+
+        document.getElementById('nominalUser1').addEventListener('input', hitungKalkulatorRincian);
+        document.getElementById('nominalUser2').addEventListener('input', hitungKalkulatorRincian);
+        document.getElementById('danaAsetDipakai').addEventListener('input', hitungKalkulatorRincian);
 
         // DELEGASI EVENT: Menangani klik Hapus dan Cairkan
         tableBody.addEventListener('click', async function(e) {
@@ -396,7 +430,6 @@
                 tableBody.insertAdjacentHTML('beforeend', row);
             });
 
-            // LOGIKA SALDO ASET CAIR BERSIH (Total Uang Cair - Uang Cair yang Dipakai Lagi)
             let totalAsetCairBersih = totalAsetCairBruto - totalDanaAsetDipakai;
             if(totalAsetCairBersih < 0) totalAsetCairBersih = 0; 
             
@@ -420,9 +453,12 @@
                 document.getElementById('barUser2').style.width = '50%';
                 document.getElementById('rasioTeks').innerText = `0% : 0%`;
             }
+            
+            // Reset Kalkulator saat data di-load ulang
+            hitungKalkulatorRincian();
         }
 
-        // VALIDASI DAN SIMPAN DATA BARU (DANA BARU VS DANA ASET)
+        // VALIDASI DAN SIMPAN DATA BARU
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
 
@@ -432,13 +468,15 @@
             
             const danaAsetDipakai = parseFloat(document.getElementById('danaAsetDipakai').value || 0);
 
+            // Validasi 1: Uang dari dompet aset cair harus cukup
             if (danaAsetDipakai > window.currentTotalAsetCair) {
-                alert(`Saldo Aset Cair Anda tidak cukup!\nMaksimal yang bisa ditarik: ${formatRupiah(window.currentTotalAsetCair)}`);
+                alert(`Gagal: Saldo Aset Cair Anda tidak cukup!\nMaksimal yang bisa ditarik hanya: ${formatRupiah(window.currentTotalAsetCair)}`);
                 return;
             }
             
+            // Validasi 2: Dana aset yang dipakai TIDAK BOLEH melebihi harga aset yang dibeli
             if (danaAsetDipakai > totalSetoran) {
-                alert(`Penggunaan dana aset (${formatRupiah(danaAsetDipakai)}) tidak boleh lebih besar dari total setoran (${formatRupiah(totalSetoran)}).`);
+                alert(`Gagal: Anda berusaha menggunakan saldo aset sebesar ${formatRupiah(danaAsetDipakai)}, padahal Total Harga Beli Portofolionya hanya ${formatRupiah(totalSetoran)}.`);
                 return;
             }
 
@@ -469,6 +507,7 @@
                 document.getElementById('nominalUser1').value = '';
                 document.getElementById('nominalUser2').value = '';
                 document.getElementById('danaAsetDipakai').value = ''; 
+                hitungKalkulatorRincian(); // Reset tampilan rincian ke 0
             }
 
             submitBtn.innerText = "Simpan Ke Portofolio";
