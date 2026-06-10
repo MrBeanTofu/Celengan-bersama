@@ -102,19 +102,15 @@
 
                     <form id="savingForm" class="space-y-4">
                         
-                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                            <label class="block text-xs font-bold text-blue-800 uppercase tracking-wider mb-2">
-                                Tarik Saldo Aset Cair (Wallet)
-                            </label>
-                            <div class="flex justify-between text-[10px] text-blue-600 mb-1">
-                                <span>Ketik nominal yang ingin dipakai:</span>
-                                <span>Maks: <span id="labelMaksAset" class="font-bold">Rp 0</span></span>
+                        <div>
+                            <div class="flex justify-between items-end mb-1">
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500">Gunakan Saldo Aset (Rp)</label>
+                                <span class="text-[10px] text-slate-400 font-medium">Maks: <span id="labelMaksAset" class="text-indigo-600 font-bold">Rp 0</span></span>
                             </div>
-                            <input type="number" id="danaAsetDipakai" placeholder="0" class="w-full rounded-lg border border-blue-200 p-2.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white transition">
-                            <p class="text-[9px] text-blue-500 mt-1.5 leading-tight">*Kosongkan jika 100% menggunakan uang deposit baru.</p>
+                            <input type="number" id="danaAsetDipakai" placeholder="0 (Kosongkan jika 100% uang baru)" class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-slate-50 transition">
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3 mt-4">
+                        <div class="grid grid-cols-2 gap-3 mt-2">
                             <div>
                                 <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Setoran Vian (Rp)</label>
                                 <input type="number" id="nominalUser1" placeholder="0" required class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-slate-50 transition">
@@ -132,7 +128,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Instrumen</label>
-                                <select id="jenisInvestasi" class="w-full rounded-xl border border-slate-200 p-3 text-sm bg-slate-50">
+                                <select id="jenisInvestasi" class="w-full rounded-xl border border-slate-200 p-3 text-sm bg-slate-50 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 transition">
                                     <option value="deposito">Deposito</option>
                                     <option value="reksadana">Reksa Dana</option>
                                 </select>
@@ -302,7 +298,7 @@
             let totalModalAktif = 0;
             let estimasiReturn = 0;
             let totalAsetCairBruto = 0; 
-            let totalDanaAsetDipakai = 0; // Mengumpulkan total dana wallet yang digunakan ulang
+            let totalDanaAsetDipakai = 0; 
             let akumulasiUser1 = 0;
             let akumulasiUser2 = 0;
 
@@ -314,7 +310,7 @@
                 const danaAsetTerpakai = parseFloat(item.dana_aset_dipakai) || 0;
                 
                 const totalGabungan = nominal1 + nominal2;
-                totalDanaAsetDipakai += danaAsetTerpakai; // Akumulasi pemakaian aset cair
+                totalDanaAsetDipakai += danaAsetTerpakai; 
                 
                 const tenor = item.jangka_waktu_bulan;
                 const bungaPersen = parseFloat(item.suku_bunga_persen);
@@ -349,7 +345,6 @@
                 const hasilAkhirRow = totalGabungan + nilaiReturn;
 
                 if (isSelesai) {
-                    // Ketika selesai, modal + return kembali masuk ke brankas Aset Cair
                     totalAsetCairBruto += hasilAkhirRow;
                 } else {
                     totalModalAktif += totalGabungan;
@@ -358,9 +353,8 @@
                     akumulasiUser2 += nominal2;
                 }
 
-                // Info Tambahan Tampilan Tabel
                 const badgeReinvest = danaAsetTerpakai > 0 
-                    ? `<div class="text-[9px] text-blue-500 font-medium mt-1">Menggunakan Dana Aset: ${formatRupiah(danaAsetTerpakai)}</div>` 
+                    ? `<div class="text-[9px] text-indigo-500 font-medium mt-1 border border-indigo-100 bg-indigo-50 rounded px-1.5 py-0.5 inline-block">♻️ Pakai Aset: ${formatRupiah(danaAsetTerpakai)}</div>` 
                     : '';
 
                 const row = `
@@ -407,7 +401,7 @@
             if(totalAsetCairBersih < 0) totalAsetCairBersih = 0; 
             
             window.currentTotalAsetCair = totalAsetCairBersih; 
-            document.getElementById('labelMaksAset').innerText = formatRupiah(totalAsetCairBersih); // Tampilkan di Label Form
+            document.getElementById('labelMaksAset').innerText = formatRupiah(totalAsetCairBersih); 
 
             const totalKekayaanBersama = totalModalAktif + totalAsetCairBersih + estimasiReturn;
 
@@ -438,13 +432,11 @@
             
             const danaAsetDipakai = parseFloat(document.getElementById('danaAsetDipakai').value || 0);
 
-            // Validasi 1: Dana aset tidak boleh melebihi saldo yang ada di wallet
             if (danaAsetDipakai > window.currentTotalAsetCair) {
                 alert(`Saldo Aset Cair Anda tidak cukup!\nMaksimal yang bisa ditarik: ${formatRupiah(window.currentTotalAsetCair)}`);
                 return;
             }
             
-            // Validasi 2: Dana aset yang ditarik tidak boleh lebih besar dari total investasi baru
             if (danaAsetDipakai > totalSetoran) {
                 alert(`Penggunaan dana aset (${formatRupiah(danaAsetDipakai)}) tidak boleh lebih besar dari total setoran (${formatRupiah(totalSetoran)}).`);
                 return;
@@ -461,7 +453,7 @@
                         tanggal_menabung: document.getElementById('tanggal').value,
                         nominal_user1: n1,
                         nominal_user2: n2,
-                        dana_aset_dipakai: danaAsetDipakai, // Mencatat nominal wallet yang terpakai
+                        dana_aset_dipakai: danaAsetDipakai, 
                         jangka_waktu_bulan: parseInt(document.getElementById('tenor').value),
                         suku_bunga_persen: parseFloat(document.getElementById('bunga').value),
                         jenis_investasi: document.getElementById('jenisInvestasi').value,
@@ -476,7 +468,7 @@
                 await ambilDataDariSupabase();
                 document.getElementById('nominalUser1').value = '';
                 document.getElementById('nominalUser2').value = '';
-                document.getElementById('danaAsetDipakai').value = ''; // Kosongkan lagi inputnya
+                document.getElementById('danaAsetDipakai').value = ''; 
             }
 
             submitBtn.innerText = "Simpan Ke Portofolio";
