@@ -220,7 +220,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 
     <script>
         const supabaseUrl = 'https://mvalceeamwqkxcydrflc.supabase.co';
@@ -258,19 +258,44 @@
         document.getElementById('nominalUser2').addEventListener('input', hitungKalkulatorRincian);
         document.getElementById('danaAsetDipakai').addEventListener('input', hitungKalkulatorRincian);
 
-        // FUNGSI BARU: EKSPOR DATA KE FILE EXCEL SUNGGUHAN (.XLSX)
-        function unduhDataExcel() {
+        // FUNGSI BARU EXCELJS - DESAIN TABEL PROFESIONAL
+        async function unduhDataExcel() {
             if (dataTabungan.length === 0) {
                 alert("Tidak ada data transaksi yang bisa diekspor!");
                 return;
             }
 
-            // Susun baris judul/header tabel untuk file Excel
-            const dataUntukExcel = [
-                ["Tanggal Menabung", "Instrumen", "Dana Baru Vian (Rp)", "Dana Baru Vitasya (Rp)", "Aset Dipakai (Rp)", "Total Modal Awal (Rp)", "Tenor/Target (Bulan)", "Proyeksi Bunga (%/Thn)", "Jatuh Tempo", "Status", "Nilai Keuntungan (Rp)", "Total Nilai Akhir (Rp)"]
+            const btn = document.getElementById('btnEksporExcel');
+            btn.innerText = "⏳ Memproses...";
+            btn.disabled = true;
+
+            // Buat Workbook Excel Baru
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Riwayat Tabungan Kita');
+
+            // Definisikan Kolom dan Lebarnya
+            worksheet.columns = [
+                { header: 'Tanggal', key: 'tanggal', width: 15 },
+                { header: 'Instrumen', key: 'instrumen', width: 18 },
+                { header: 'Uang Baru Vian', key: 'vian', width: 22 },
+                { header: 'Uang Baru Vitasya', key: 'vitasya', width: 22 },
+                { header: 'Pakai Saldo Aset', key: 'aset', width: 22 },
+                { header: 'Total Modal', key: 'total_modal', width: 22 },
+                { header: 'Tenor (Bulan)', key: 'tenor', width: 15 },
+                { header: 'Proyeksi (%)', key: 'bunga', width: 15 },
+                { header: 'Jatuh Tempo', key: 'jatuh_tempo', width: 15 },
+                { header: 'Status', key: 'status', width: 18 },
+                { header: 'Keuntungan Riil/Est', key: 'keuntungan', width: 22 },
+                { header: 'Nilai Akhir', key: 'nilai_akhir', width: 22 }
             ];
 
-            // Isi baris data satu per satu
+            // Memberi Warna & Bolding pada Header (Baris 1)
+            const headerRow = worksheet.getRow(1);
+            headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }; // Tulisan Putih
+            headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } }; // Background Biru Indigo
+            headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+
+            // Mengisi Data ke Baris
             dataTabungan.forEach((item) => {
                 const nominal1 = parseFloat(item.nominal_user1) || 0;
                 const nominal2 = parseFloat(item.nominal_user2) || 0;
@@ -285,8 +310,7 @@
                 const tanggalMulai = new Date(tanggalDB);
                 const tanggalJatuhTempoObj = new Date(tanggalDB);
                 tanggalJatuhTempoObj.setMonth(tanggalJatuhTempoObj.getMonth() + tenor);
-                const tglJatuhTempoStr = tanggalJatuhTempoObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-
+                
                 let isSelesai = item.status === 'selesai' || item.sudah_dicairkan;
                 let nilaiReturn = 0;
 
@@ -297,34 +321,59 @@
                 }
 
                 const hasilAkhirRow = totalGabungan + nilaiReturn;
-                const statusTeks = isSelesai ? "Cair / Selesai" : "Berjalan";
 
-                dataUntukExcel.push([
-                    tanggalDB,
-                    jenisInvestasi,
-                    nominal1,
-                    nominal2,
-                    danaAsetTerpakai,
-                    totalGabungan,
-                    tenor,
-                    bungaPersen,
-                    tglJatuhTempoStr,
-                    statusTeks,
-                    nilaiReturn,
-                    hasilAkhirRow
-                ]);
+                // Tambahkan data ke sheet
+                worksheet.addRow({
+                    tanggal: tanggalDB,
+                    instrumen: jenisInvestasi,
+                    vian: nominal1,
+                    vitasya: nominal2,
+                    aset: danaAsetTerpakai,
+                    total_modal: totalGabungan,
+                    tenor: tenor,
+                    bunga: bungaPersen,
+                    jatuh_tempo: tanggalJatuhTempoObj.toISOString().split('T')[0], // Format YYYY-MM-DD
+                    status: isSelesai ? "CAIR" : "BERJALAN",
+                    keuntungan: nilaiReturn,
+                    nilai_akhir: hasilAkhirRow
+                });
             });
 
-            // Gunakan SheetJS untuk mengonversi data array ke tabel format .xlsx
-            const worksheet = XLSX.utils.aoa_to_sheet(dataUntukExcel);
-            const workbook = XLSX.utils.book_new();
-            
-            // Tambahkan worksheet ke dalam workbook
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Riwayat Celengan");
+            // Memberikan Border (Garis Tabel) & Format Rupiah Otomatis ke Seluruh Data
+            worksheet.eachRow((row, rowNumber) => {
+                row.eachCell((cell, colNumber) => {
+                    // Beri Garis Kotak-Kotak (Border Thin)
+                    cell.border = {
+                        top: { style: 'thin' },
+                        left: { style: 'thin' },
+                        bottom: { style: 'thin' },
+                        right: { style: 'thin' }
+                    };
 
-            // Perintah mengunduh file
-            const namaFile = `Riwayat_CelenganBersama_${new Date().toISOString().split('T')[0]}.xlsx`;
-            XLSX.writeFile(workbook, namaFile);
+                    // Posisikan text rata tengah untuk kolom tertentu
+                    if (rowNumber > 1 && [1, 2, 7, 8, 9, 10].includes(colNumber)) {
+                        cell.alignment = { horizontal: 'center' };
+                    }
+
+                    // Beri format Rupiah Otomatis (Hanya untuk kolom Uang)
+                    if (rowNumber > 1 && [3, 4, 5, 6, 11, 12].includes(colNumber)) {
+                        cell.numFmt = '"Rp"#,##0;[Red]\-"Rp"#,##0';
+                    }
+                });
+            });
+
+            // Mengunduh File
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Riwayat_Celengan_${new Date().toISOString().split('T')[0]}.xlsx`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            btn.innerText = "📊 Ekspor Excel";
+            btn.disabled = false;
         }
 
         document.getElementById('btnEksporExcel').addEventListener('click', unduhDataExcel);
