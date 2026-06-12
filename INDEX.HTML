@@ -176,9 +176,14 @@
                         <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
                             <span class="w-1.5 h-5 bg-indigo-600 rounded-sm inline-block"></span> Riwayat & Portofolio Aktif
                         </h2>
-                        <button id="btnResetData" class="text-xs font-medium text-red-500 hover:text-red-700 hover:bg-red-50 px-2.5 py-1.5 rounded-lg transition border border-transparent hover:border-red-100 cursor-pointer">
-                            Reset Data
-                        </button>
+                        <div class="flex gap-2">
+                            <button id="btnEksporExcel" class="text-xs font-medium text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 px-2.5 py-1.5 rounded-lg transition border border-emerald-200 flex items-center gap-1 cursor-pointer">
+                                📊 Ekspor Excel
+                            </button>
+                            <button id="btnResetData" class="text-xs font-medium text-red-500 hover:text-red-700 hover:bg-red-50 px-2.5 py-1.5 rounded-lg transition border border-transparent hover:border-red-100 cursor-pointer">
+                                Reset Data
+                            </button>
+                        </div>
                     </div>
 
                     <div class="overflow-x-auto">
@@ -238,13 +243,11 @@
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(angka);
         }
 
-        // FUNGSI KALKULATOR LIVE MENGGUNAKAN LOGIKA BARU
         function hitungKalkulatorRincian() {
-            const n1 = parseFloat(document.getElementById('nominalUser1').value || 0); // Tambahan Vian
-            const n2 = parseFloat(document.getElementById('nominalUser2').value || 0); // Tambahan Vitasya
-            const aset = parseFloat(document.getElementById('danaAsetDipakai').value || 0); // Saldo Aset Terpakai
+            const n1 = parseFloat(document.getElementById('nominalUser1').value || 0); 
+            const n2 = parseFloat(document.getElementById('nominalUser2').value || 0); 
+            const aset = parseFloat(document.getElementById('danaAsetDipakai').value || 0); 
             
-            // Total Portofolio adalah gabungan ketiga sumber dana
             const total = n1 + n2 + aset;
             document.getElementById('calcTotal').innerText = formatRupiah(total);
         }
@@ -252,6 +255,66 @@
         document.getElementById('nominalUser1').addEventListener('input', hitungKalkulatorRincian);
         document.getElementById('nominalUser2').addEventListener('input', hitungKalkulatorRincian);
         document.getElementById('danaAsetDipakai').addEventListener('input', hitungKalkulatorRincian);
+
+        // FUNGSI UTAMA: EKSPOR DATA KE EXCEL (CSV FORMATTED)
+        function unduhDataExcel() {
+            if (dataTabungan.length === 0) {
+                alert("Tidak ada data transaksi yang bisa diekspor!");
+                return;
+            }
+
+            // Gunakan karakter BOM \uFEFF agar Excel otomatis mengenali tanda koma & UTF-8 Indonesia
+            let csvContent = "\uFEFF";
+            
+            // Baris Judul Kolom di Excel
+            csvContent += "Tanggal Menabung,Uang Tambahan Vian,Uang Tambahan Vitasya,Saldo Aset Terpakai,Total Nilai Portofolio,Jenis Instrumen,Tenor (Bulan),Suku Bunga / Estimasi (%),Tanggal Jatuh Tempo,Status Portofolio,Keuntungan Hasil (Riil/Est),Total Nilai Akhir\n";
+
+            dataTabungan.forEach((item) => {
+                const nominal1 = parseFloat(item.nominal_user1) || 0;
+                const nominal2 = parseFloat(item.nominal_user2) || 0;
+                const danaAsetTerpakai = parseFloat(item.dana_aset_dipakai) || 0;
+                const totalGabungan = nominal1 + nominal2 + danaAsetTerpakai;
+                
+                const tenor = item.jangka_waktu_bulan;
+                const bungaPersen = parseFloat(item.suku_bunga_persen);
+                const tanggalDB = item.tanggal_menabung;
+                const jenisInvestasi = item.jenis_investasi || 'deposito';
+
+                const tanggalMulai = new Date(tanggalDB);
+                const tanggalJatuhTempoObj = new Date(tanggalDB);
+                tanggalJatuhTempoObj.setMonth(tanggalJatuhTempoObj.getMonth() + tenor);
+                const tglJatuhTempoStr = tanggalJatuhTempoObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+
+                let isSelesai = item.status === 'selesai' || item.sudah_dicairkan;
+
+                let nilaiReturn = 0;
+                if (isSelesai) {
+                    nilaiReturn = parseFloat(item.keuntungan_riil) || 0;
+                } else {
+                    nilaiReturn = Math.floor(totalGabungan * (bungaPersen / 100) * (tenor / 12));
+                }
+
+                const hasilAkhirRow = totalGabungan + nilaiReturn;
+                const statusTeks = isSelesai ? "Selesai / Cair" : "Sedang Berjalan";
+
+                // Susun string CSV aman dari bentrok tanda baca
+                csvContent += `"${tanggalDB}","${nominal1}","${nominal2}","${danaAsetTerpakai}","${totalGabungan}","${jenisInvestasi}","${tenor}","${bungaPersen}","${tglJatuhTempoStr}","${statusTeks}","${nilaiReturn}","${hasilAkhirRow}"\n`;
+            });
+
+            // Trigger mengunduh otomatis file spreadsheet
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Riwayat_CelenganBersama_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Hubungkan Tombol dengan Fungsi Ekspor
+        document.getElementById('btnEksporExcel').addEventListener('click', unduhDataExcel);
 
         tableBody.addEventListener('click', async function(e) {
             if (e.target.classList.contains('btn-hapus-row')) {
@@ -325,10 +388,9 @@
             const sekarang = new Date();
 
             dataTabungan.forEach((item) => {
-                // LOGIKA BARU: Total gabungan adalah gabungan ketiganya.
-                const nominal1 = parseFloat(item.nominal_user1) || 0; // Uang Baru Vian
-                const nominal2 = parseFloat(item.nominal_user2) || 0; // Uang Baru Vitasya
-                const danaAsetTerpakai = parseFloat(item.dana_aset_dipakai) || 0; // Uang Aset Cair
+                const nominal1 = parseFloat(item.nominal_user1) || 0; 
+                const nominal2 = parseFloat(item.nominal_user2) || 0; 
+                const danaAsetTerpakai = parseFloat(item.dana_aset_dipakai) || 0; 
                 
                 const totalGabungan = nominal1 + nominal2 + danaAsetTerpakai; 
                 totalDanaAsetDipakai += danaAsetTerpakai; 
@@ -345,7 +407,6 @@
 
                 let isSelesai = item.status === 'selesai' || item.sudah_dicairkan;
 
-                // Hitung Nilai Return
                 let nilaiReturn = 0;
                 let textBungaClass = "text-emerald-500 font-normal";
                 let labelBunga = "(Proyeksi)";
@@ -371,12 +432,10 @@
                     totalModalAktif += totalGabungan;
                     estimasiReturn += nilaiReturn;
                     
-                    // Untuk rasio kepemilikan, uang aset dibagi 2 (karena ini tabungan bersama), lalu ditambah uang baru masing-masing
                     akumulasiUser1 += nominal1 + (danaAsetTerpakai / 2);
                     akumulasiUser2 += nominal2 + (danaAsetTerpakai / 2);
                 }
 
-                // Tampilan rincian di tabel
                 const textUangBaruVian = nominal1 > 0 ? `Vian: ${formatRupiah(nominal1)}` : '';
                 const textUangBaruVit = nominal2 > 0 ? `Vitasya: ${formatRupiah(nominal2)}` : '';
                 const textAsetPakai = danaAsetTerpakai > 0 ? `♻️ Aset: ${formatRupiah(danaAsetTerpakai)}` : '';
@@ -416,7 +475,6 @@
                 tableBody.insertAdjacentHTML('beforeend', row);
             });
 
-            // LOGIKA SALDO ASET CAIR BERSIH
             let totalAsetCairBersih = totalAsetCairBruto - totalDanaAsetDipakai;
             if(totalAsetCairBersih < 0) totalAsetCairBersih = 0; 
             
@@ -447,19 +505,17 @@
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
 
-            const n1 = parseFloat(document.getElementById('nominalUser1').value || 0); // Uang Baru
-            const n2 = parseFloat(document.getElementById('nominalUser2').value || 0); // Uang Baru
-            const danaAsetDipakai = parseFloat(document.getElementById('danaAsetDipakai').value || 0); // Aset
+            const n1 = parseFloat(document.getElementById('nominalUser1').value || 0); 
+            const n2 = parseFloat(document.getElementById('nominalUser2').value || 0); 
+            const danaAsetDipakai = parseFloat(document.getElementById('danaAsetDipakai').value || 0); 
             
             const totalSetoran = n1 + n2 + danaAsetDipakai;
 
-            // Pastikan user menginput minimal salah satu
             if (totalSetoran === 0) {
                 alert("Harap masukkan setidaknya satu sumber dana (Aset Cair, Vian, atau Vitasya)!");
                 return;
             }
 
-            // Validasi: Uang dari dompet aset cair harus cukup
             if (danaAsetDipakai > window.currentTotalAsetCair) {
                 alert(`Gagal: Saldo Aset Cair Anda tidak cukup!\nMaksimal yang bisa ditarik hanya: ${formatRupiah(window.currentTotalAsetCair)}`);
                 return;
@@ -474,9 +530,9 @@
                 .insert([
                     {
                         tanggal_menabung: document.getElementById('tanggal').value,
-                        nominal_user1: n1, // Hanya menyimpan uang baru
-                        nominal_user2: n2, // Hanya menyimpan uang baru
-                        dana_aset_dipakai: danaAsetDipakai, // Menyimpan aset yang dipakai
+                        nominal_user1: n1, 
+                        nominal_user2: n2, 
+                        dana_aset_dipakai: danaAsetDipakai, 
                         jangka_waktu_bulan: parseInt(document.getElementById('tenor').value),
                         suku_bunga_persen: parseFloat(document.getElementById('bunga').value),
                         jenis_investasi: document.getElementById('jenisInvestasi').value,
@@ -499,7 +555,6 @@
             submitBtn.disabled = false;
         });
 
-        // HAPUS SEMUA DATA (SANGAT DIANJURKAN UNTUK DITEKAN SETELAH UPDATE INI)
         document.getElementById('btnResetData').addEventListener('click', async function() {
             if (confirm('Apakah Anda yakin ingin menghapus seluruh riwayat tabungan bersama dari database?')) {
                 const { error } = await db.from('tabungan_bersama').delete().neq('id', '0');
