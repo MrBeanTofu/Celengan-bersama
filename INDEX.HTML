@@ -220,6 +220,8 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
     <script>
         const supabaseUrl = 'https://mvalceeamwqkxcydrflc.supabase.co';
         const supabaseKey = 'sb_publishable_hvBlPm85QvNHbt4ELPM6pw_yd8aBGIc';
@@ -256,19 +258,19 @@
         document.getElementById('nominalUser2').addEventListener('input', hitungKalkulatorRincian);
         document.getElementById('danaAsetDipakai').addEventListener('input', hitungKalkulatorRincian);
 
-        // FUNGSI UTAMA: EKSPOR DATA KE EXCEL (CSV FORMATTED)
+        // FUNGSI BARU: EKSPOR DATA KE FILE EXCEL SUNGGUHAN (.XLSX)
         function unduhDataExcel() {
             if (dataTabungan.length === 0) {
                 alert("Tidak ada data transaksi yang bisa diekspor!");
                 return;
             }
 
-            // Gunakan karakter BOM \uFEFF agar Excel otomatis mengenali tanda koma & UTF-8 Indonesia
-            let csvContent = "\uFEFF";
-            
-            // Baris Judul Kolom di Excel
-            csvContent += "Tanggal Menabung,Uang Tambahan Vian,Uang Tambahan Vitasya,Saldo Aset Terpakai,Total Nilai Portofolio,Jenis Instrumen,Tenor (Bulan),Suku Bunga / Estimasi (%),Tanggal Jatuh Tempo,Status Portofolio,Keuntungan Hasil (Riil/Est),Total Nilai Akhir\n";
+            // Susun baris judul/header tabel untuk file Excel
+            const dataUntukExcel = [
+                ["Tanggal Menabung", "Instrumen", "Dana Baru Vian (Rp)", "Dana Baru Vitasya (Rp)", "Aset Dipakai (Rp)", "Total Modal Awal (Rp)", "Tenor/Target (Bulan)", "Proyeksi Bunga (%/Thn)", "Jatuh Tempo", "Status", "Nilai Keuntungan (Rp)", "Total Nilai Akhir (Rp)"]
+            ];
 
+            // Isi baris data satu per satu
             dataTabungan.forEach((item) => {
                 const nominal1 = parseFloat(item.nominal_user1) || 0;
                 const nominal2 = parseFloat(item.nominal_user2) || 0;
@@ -278,7 +280,7 @@
                 const tenor = item.jangka_waktu_bulan;
                 const bungaPersen = parseFloat(item.suku_bunga_persen);
                 const tanggalDB = item.tanggal_menabung;
-                const jenisInvestasi = item.jenis_investasi || 'deposito';
+                const jenisInvestasi = (item.jenis_investasi || 'deposito').toUpperCase();
 
                 const tanggalMulai = new Date(tanggalDB);
                 const tanggalJatuhTempoObj = new Date(tanggalDB);
@@ -286,8 +288,8 @@
                 const tglJatuhTempoStr = tanggalJatuhTempoObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 
                 let isSelesai = item.status === 'selesai' || item.sudah_dicairkan;
-
                 let nilaiReturn = 0;
+
                 if (isSelesai) {
                     nilaiReturn = parseFloat(item.keuntungan_riil) || 0;
                 } else {
@@ -295,25 +297,36 @@
                 }
 
                 const hasilAkhirRow = totalGabungan + nilaiReturn;
-                const statusTeks = isSelesai ? "Selesai / Cair" : "Sedang Berjalan";
+                const statusTeks = isSelesai ? "Cair / Selesai" : "Berjalan";
 
-                // Susun string CSV aman dari bentrok tanda baca
-                csvContent += `"${tanggalDB}","${nominal1}","${nominal2}","${danaAsetTerpakai}","${totalGabungan}","${jenisInvestasi}","${tenor}","${bungaPersen}","${tglJatuhTempoStr}","${statusTeks}","${nilaiReturn}","${hasilAkhirRow}"\n`;
+                dataUntukExcel.push([
+                    tanggalDB,
+                    jenisInvestasi,
+                    nominal1,
+                    nominal2,
+                    danaAsetTerpakai,
+                    totalGabungan,
+                    tenor,
+                    bungaPersen,
+                    tglJatuhTempoStr,
+                    statusTeks,
+                    nilaiReturn,
+                    hasilAkhirRow
+                ]);
             });
 
-            // Trigger mengunduh otomatis file spreadsheet
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.setAttribute("href", url);
-            link.setAttribute("download", `Riwayat_CelenganBersama_${new Date().toISOString().split('T')[0]}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            // Gunakan SheetJS untuk mengonversi data array ke tabel format .xlsx
+            const worksheet = XLSX.utils.aoa_to_sheet(dataUntukExcel);
+            const workbook = XLSX.utils.book_new();
+            
+            // Tambahkan worksheet ke dalam workbook
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Riwayat Celengan");
+
+            // Perintah mengunduh file
+            const namaFile = `Riwayat_CelenganBersama_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(workbook, namaFile);
         }
 
-        // Hubungkan Tombol dengan Fungsi Ekspor
         document.getElementById('btnEksporExcel').addEventListener('click', unduhDataExcel);
 
         tableBody.addEventListener('click', async function(e) {
@@ -384,8 +397,6 @@
             let totalDanaAsetDipakai = 0; 
             let akumulasiUser1 = 0;
             let akumulasiUser2 = 0;
-
-            const sekarang = new Date();
 
             dataTabungan.forEach((item) => {
                 const nominal1 = parseFloat(item.nominal_user1) || 0; 
